@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10110f">
+  <title>Pocket Voice</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%2310110f'/%3E%3Cpath d='M16 35h4V25h4v20h4V19h4v28h4V23h4v18h4V29h4v12' fill='none' stroke='%23d6ff43' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Pocket Voice home">
+        <span class="brand-mark"><i></i><i></i><i></i><i></i></span>
+        <span>Pocket Voice</span>
+      </a>
+      <div class="status"><span id="statusDot"></span><span id="statusText">Checking engine</span></div>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">LOCAL · PRIVATE · CPU OPTIMIZED</p>
+      <h1>Your voice,<br><em>on your machine.</em></h1>
+      <p class="lede">Clone a voice from a clean recording, then turn any script into speech. Files stay on this computer.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="voice-panel panel">
+        <div class="panel-heading">
+          <div><span class="step">01</span><h2>Voice</h2></div>
+          <button id="newVoiceBtn" class="text-btn" type="button">+ New voice</button>
+        </div>
+
+        <div id="voiceEmpty" class="voice-empty">
+          <div class="orb"><span></span></div>
+          <h3>No saved voices yet</h3>
+          <p>Use 10–30 seconds of one clear speaker with minimal noise and no music.</p>
+          <button id="emptyUploadBtn" class="secondary-btn" type="button">Add a voice sample</button>
+        </div>
+
+        <div id="voiceList" class="voice-list" role="radiogroup" aria-label="Saved voices"></div>
+        <div class="privacy-note"><span>⌁</span> Voice data and generations stay local.</div>
+      </aside>
+
+      <section class="generate-panel panel">
+        <div class="panel-heading">
+          <div><span class="step">02</span><h2>Script</h2></div>
+          <span id="characterCount" class="character-count">0 / 12,000</span>
+        </div>
+
+        <textarea id="scriptText" maxlength="12000" placeholder="Write something worth saying…" aria-label="Text to generate"></textarea>
+
+        <div class="controls-row">
+          <label>Language
+            <select id="languageSelect">
+              <option value="english">English · 2026-04 best cloning</option>
+              <option value="french">French</option>
+              <option value="german">German</option>
+              <option value="portuguese">Portuguese</option>
+              <option value="italian">Italian</option>
+              <option value="spanish">Spanish</option>
+            </select>
+          </label>
+          <button id="settingsBtn" class="settings-btn" type="button" aria-expanded="false">Generation settings <span>⌄</span></button>
+        </div>
+
+        <div id="settingsPanel" class="settings-panel" hidden>
+          <label>Voice profile
+            <select id="profileSelect">
+              <option value="natural" selected>Natural · recommended</option>
+              <option value="stable">Stable · consistent</option>
+              <option value="expressive">Expressive · more variation</option>
+            </select>
+            <small>Level 5 cannot repair an unnatural reference recording.</small>
+          </label>
+          <label>Temperature <output id="temperatureValue">0.5</output>
+            <input id="temperature" type="range" min="0.1" max="1.5" step="0.1" value="0.5">
+            <small>Lower is steadier; higher is more expressive.</small>
+          </label>
+          <label>Decode steps
+            <select id="decodeSteps">
+              <option value="1">1 · Fast</option>
+              <option value="2">2</option>
+              <option value="3" selected>3 · Natural</option>
+              <option value="4">4</option>
+              <option value="5">5 · Slowest</option>
+            </select>
+          </label>
+          <label>Speaking pace <output id="speedValue">1.00×</output>
+            <input id="speed" type="range" min="0.8" max="1.2" step="0.02" value="1.0">
+            <small>Pitch-preserving output speed adjustment.</small>
+          </label>
+          <label class="toggle-row"><span><strong>INT8 quantization</strong><small>Try for lower memory use; first load is slower.</small></span><input id="quantize" type="checkbox"><i></i></label>
+          <label>Tail after speech
+            <select id="tailFrames">
+              <option value="">Automatic</option>
+              <option value="0">None</option>
+              <option value="1">80 ms</option>
+              <option value="2">160 ms</option>
+              <option value="4">320 ms</option>
+            </select>
+          </label>
+        </div>
+
+        <button id="generateBtn" class="primary-btn" type="button" disabled>
+          <span class="button-label"><b>Generate speech</b><small>Runs locally with Pocket TTS</small></span>
+          <span class="arrow">↗</span>
+        </button>
+
+        <div id="result" class="result" hidden>
+          <div class="result-head"><span>Generated audio</span><span id="duration"></span></div>
+          <audio id="audioPlayer" controls preload="metadata"></audio>
+          <a id="downloadLink" class="download-btn" download>Download WAV <span>↓</span></a>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="voiceDialog">
+    <form id="voiceForm" method="dialog">
+      <button class="dialog-close" type="button" aria-label="Close">×</button>
+      <p class="eyebrow">VOICE CONDITIONING</p>
+      <h2>Add a voice</h2>
+      <p class="dialog-copy">Use 15–30 seconds of connected, conversational speech. Avoid alphabets, word lists, exaggerated slowness, and repeated noise removal.</p>
+
+      <details class="recording-guide">
+        <summary>Recommended American-English recording script</summary>
+        <p id="sampleScript">Hey, I wanted to leave a quick note before I head out. The weather changed this morning, but the afternoon should be bright and warm. Could you send me the updated schedule when you get a chance? I think the new plan will work really well.</p>
+        <button id="copySampleBtn" class="text-btn" type="button">Copy script</button>
+      </details>
+
+      <label class="field">Voice name<input id="voiceName" name="name" maxlength="80" placeholder="e.g. Nityam — conversational" required></label>
+      <label class="field">Spoken language
+        <select id="voiceLanguage" name="language">
+          <option value="english">English · 2026-04 best cloning</option><option value="french">French</option>
+          <option value="german">German</option><option value="portuguese">Portuguese</option>
+          <option value="italian">Italian</option><option value="spanish">Spanish</option>
+        </select>
+      </label>
+      <label class="field">Reference processing
+        <select id="cleanupMode" name="cleanup_mode">
+          <option value="natural" selected>Natural · light cleanup (recommended)</option>
+          <option value="raw">Already cleaned · resample only</option>
+          <option value="denoise">Noisy room · gentle denoise</option>
+        </select>
+        <small>For a “noise removed” file, choose Already cleaned.</small>
+      </label>
+      <label id="dropZone" class="drop-zone">
+        <input id="audioFile" name="file" type="file" accept=".mp3,.wav,.m4a,.flac,.ogg,audio/*" required>
+        <span class="upload-icon">↑</span>
+        <strong id="fileLabel">Choose or drop audio</strong>
+        <small>MP3, WAV, M4A, FLAC or OGG · up to 100 MB</small>
+      </label>
+      <label class="consent"><input id="consent" name="consent" type="checkbox" required><span>I own this voice or have explicit permission to clone it.</span></label>
+      <button id="extractBtn" class="primary-btn" type="submit"><span class="button-label"><b>Extract & save voice</b><small>Done once, then reused instantly</small></span><span class="arrow">↗</span></button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" popover="manual"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

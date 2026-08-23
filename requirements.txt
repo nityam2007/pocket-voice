@@ -1,0 +1,7 @@
+pocket-tts[audio,quantize]==2.1.0
+fastapi>=0.116,<1
+uvicorn[standard]>=0.35,<1
+python-multipart>=0.0.21
+imageio-ffmpeg>=0.6,<1
+scipy>=1.16,<2
+
